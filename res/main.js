@@ -93,7 +93,7 @@ const pluginModule = {
             if (!secretHeader) {
                 return res.status(401).json({
                     error: 'Unauthorized: Missing X-Admin-Secret header',
-                    hint: 'Use X-Admin-Secret: <token>'
+                    hint: 'Use X-Admin-Secret: <token>',
                 });
             }
             let authenticated = false;
@@ -113,7 +113,8 @@ const pluginModule = {
                     const timestamp = parseInt(timestampHeader, 10);
                     const now = Math.floor(Date.now() / 1000);
                     const timeDiff = Math.abs(now - timestamp);
-                    if (timeDiff <= 300) { // 5分钟有效期
+                    if (timeDiff <= 300) {
+                        // 5分钟有效期
                         const expectedHash = crypto_1.default
                             .createHash(hashAlgorithm)
                             .update(adminSecret + timestamp)
@@ -149,6 +150,6 @@ const pluginModule = {
     },
     destroy() {
         // 清理资源（如果需要）
-    }
+    },
 };
 exports.default = pluginModule;

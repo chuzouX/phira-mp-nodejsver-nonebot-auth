@@ -2,7 +2,7 @@
 
 # 管理员密钥（强烈建议使用强随机字符串）
 # 也可以在 .env 中设置 ADMIN_SECRET
-adminSecret: ""
+adminSecret: ''
 
 # 哈希算法 (sha256 或 sha512)
 secretHashAlgorithm: sha256

@@ -13,11 +13,13 @@
 ## 依赖说明
 
 本插件依赖 **web-dashboard** 插件：
+
 - **web-dashboard** (UUID: `b9e2f5a8-7c3d-4f1e-9a6b-2d8c4e5f7a1b`)
   - 提供 HTTP 服务器和 Express App
   - 提供路由注册能力
 
 插件加载顺序：
+
 1. websocket (无依赖)
 2. web-dashboard (依赖 websocket)
 3. **nonebot-auth** (依赖 web-dashboard)
@@ -35,7 +37,7 @@ ADMIN_SECRET=your-super-secret-admin-key-here
 **或者**在 `config/nonebot-auth/config.yaml` 中设置：
 
 ```yaml
-adminSecret: "your-super-secret-admin-key-here"
+adminSecret: 'your-super-secret-admin-key-here'
 secretHashAlgorithm: sha256
 enableLogging: true
 ```
@@ -44,13 +46,14 @@ enableLogging: true
 
 本插件支持两种认证方式：
 
-| 模式 | 说明 | 适用场景 |
-|------|------|---------|
-| `sha256` | SHA-256 哈希认证 | 传统 API 调用 |
-| `aes-cbc` | AES-256-CBC 加密认证 | nonebot 插件 |
-| `both` | 同时支持两种方式 | **推荐**** |
+| 模式      | 说明                 | 适用场景      |
+| --------- | -------------------- | ------------- |
+| `sha256`  | SHA-256 哈希认证     | 传统 API 调用 |
+| `aes-cbc` | AES-256-CBC 加密认证 | nonebot 插件  |
+| `both`    | 同时支持两种方式     | **推荐\*\***  |
 
 在 `config/nonebot-auth/config.yaml` 中设置：
+
 ```yaml
 authMode: both
 ```
@@ -115,12 +118,12 @@ def make_admin_request(endpoint):
     timestamp = str(int(time.time()))
     hash_input = ADMIN_SECRET + timestamp
     secret_hash = hashlib.sha256(hash_input.encode()).hexdigest()
-    
+
     headers = {
         'X-Admin-Secret': secret_hash,
         'X-Admin-Timestamp': timestamp
     }
-    
+
     response = requests.get(f"{BASE_URL}{endpoint}", headers=headers)
     return response.json()
 
@@ -144,21 +147,21 @@ async function makeAdminRequest(endpoint) {
     .createHash('sha256')
     .update(ADMIN_SECRET + timestamp)
     .digest('hex');
-  
+
   const response = await axios.get(`${BASE_URL}${endpoint}`, {
     headers: {
       'X-Admin-Secret': hash,
-      'X-Admin-Timestamp': timestamp
-    }
+      'X-Admin-Timestamp': timestamp,
+    },
   });
-  
+
   return response.data;
 }
 
 // 使用示例
 makeAdminRequest('/api/nonebot/status')
-  .then(data => console.log(data))
-  .catch(err => console.error(err));
+  .then((data) => console.log(data))
+  .catch((err) => console.error(err));
 ```
 
 ## 功能说明
@@ -237,13 +240,13 @@ export default pluginModule;
 
 ## 与 Web Dashboard 的区别
 
-| 特性 | Web Dashboard | NoneBot Auth |
-|------|---------------|-------------------|
-| 鉴权方式 | Session/Cookie | HTTP Header |
-| 适用场景 | 浏览器 Web UI | 脚本/Bot/API |
-| 需要登录 | 是（Phira 账号） | 否（直接使用密钥） |
-| 会话管理 | 有（超时自动登出） | 无（每次验证） |
-| 依赖关系 | 依赖 websocket | 依赖 web-dashboard |
+| 特性     | Web Dashboard      | NoneBot Auth       |
+| -------- | ------------------ | ------------------ |
+| 鉴权方式 | Session/Cookie     | HTTP Header        |
+| 适用场景 | 浏览器 Web UI      | 脚本/Bot/API       |
+| 需要登录 | 是（Phira 账号）   | 否（直接使用密钥） |
+| 会话管理 | 有（超时自动登出） | 无（每次验证）     |
+| 依赖关系 | 依赖 websocket     | 依赖 web-dashboard |
 
 ## 故障排除
 
@@ -258,6 +261,7 @@ export default pluginModule;
 **原因：** 哈希计算错误或时间戳不同步
 
 **解决：**
+
 1. 确认 ADMIN_SECRET 与服务器配置一致
 2. 检查客户端和服务器时间是否同步
 3. 确认哈希算法为 SHA-256
@@ -274,6 +278,7 @@ export default pluginModule;
 **原因：** ADMIN_SECRET 配置不正确或未配置
 
 **解决：**
+
 1. 确保 phira-mp-server 的 `.env` 中设置了 `ADMIN_SECRET`
 2. 确保 NoneBot 的 `.env` 中设置了相同的 `PHIRA_ADMIN_SECRET`
 3. 重启两个服务使配置生效
@@ -297,15 +302,15 @@ export default pluginModule;
 
 ### NoneBot 指令对照
 
-| NoneBot 指令 | API 端点 | 说明 |
-|-------------|---------|------|
-| `/players` | `GET /api/all-players` | 列出所有在线玩家 |
-| `/broadcast "内容"` | `POST /api/admin/broadcast` | 全服广播 |
-| `/kick {UID}` | `POST /api/admin/kick-player` | 踢出玩家 |
-| `/fstart {RID}` | `POST /api/admin/force-start` | 强制开始游戏 |
-| `/lock {RID}` | `POST /api/admin/toggle-lock` | 切换房间锁定 |
-| `/maxp {RID} {N}` | `POST /api/admin/set-max-players` | 修改房间人数上限 |
-| `/close {RID}` | `POST /api/admin/close-room` | 关闭房间 |
+| NoneBot 指令        | API 端点                          | 说明             |
+| ------------------- | --------------------------------- | ---------------- |
+| `/players`          | `GET /api/all-players`            | 列出所有在线玩家 |
+| `/broadcast "内容"` | `POST /api/admin/broadcast`       | 全服广播         |
+| `/kick {UID}`       | `POST /api/admin/kick-player`     | 踢出玩家         |
+| `/fstart {RID}`     | `POST /api/admin/force-start`     | 强制开始游戏     |
+| `/lock {RID}`       | `POST /api/admin/toggle-lock`     | 切换房间锁定     |
+| `/maxp {RID} {N}`   | `POST /api/admin/set-max-players` | 修改房间人数上限 |
+| `/close {RID}`      | `POST /api/admin/close-room`      | 关闭房间         |
 
 ## 开发者信息
 
