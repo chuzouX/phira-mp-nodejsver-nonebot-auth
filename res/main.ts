@@ -89,16 +89,62 @@ const pluginModule: PluginModule = {
       }
     }
 
+    const usedNonces = new Map<string, number>();
+
+    function cleanExpiredNonces(): void {
+      const now = Date.now();
+      for (const [nonce, expiresAt] of usedNonces.entries()) {
+        if (now > expiresAt) {
+          usedNonces.delete(nonce);
+        }
+      }
+    }
+
     // 验证 AES-256-CBC token（兼容 nonebot 插件）
     function verifyAesCbcToken(token: string, secret: string): boolean {
       const decrypted = decryptAesCbcToken(token, secret);
       if (!decrypted) return false;
 
-      // 解密后的格式：{date}_{secret}_xy521
+      cleanExpiredNonces();
+
+      // 格式1：${timestamp}_${nonce}_${secret}_xy521
+      const suffix = `_${secret}_xy521`;
+      if (decrypted.endsWith(suffix)) {
+        const prefix = decrypted.slice(0, decrypted.length - suffix.length);
+        const parts = prefix.split('_');
+        if (parts.length === 2 && /^\d{10}$/.test(parts[0])) {
+          const timestamp = parseInt(parts[0], 10);
+          const nonce = parts[1];
+          const nowSec = Math.floor(Date.now() / 1000);
+
+          if (Math.abs(nowSec - timestamp) > 300) {
+            api.logger.warn(
+              `[NoneBotAuth] AES token timestamp expired: ${timestamp} (now: ${nowSec})`,
+            );
+            return false;
+          }
+
+          if (usedNonces.has(nonce)) {
+            api.logger.warn(`[NoneBotAuth] AES token nonce replayed: ${nonce}`);
+            return false;
+          }
+
+          usedNonces.set(nonce, Date.now() + 300 * 1000);
+          return true;
+        }
+      }
+
+      // 格式2（向下兼容旧版）：${dateStr}_${secret}_xy521
       const dateStr = new Date().toISOString().substring(0, 10); // YYYY-MM-DD
       const expectedPlain = `${dateStr}_${secret}_xy521`;
+      if (decrypted === expectedPlain) {
+        api.logger.warn(
+          `[NoneBotAuth] Deprecated legacy date-based AES token received. Please upgrade client to timestamped tokens.`,
+        );
+        return true;
+      }
 
-      return decrypted === expectedPlain;
+      return false;
     }
 
     // 中间件：验证 Admin Secret（支持多种认证方式）
